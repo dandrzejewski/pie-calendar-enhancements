@@ -2,25 +2,16 @@
 /**
  * Plugin Name: Pie Calendar Enhancements
  * Description: Pie Calendar Customizations
- * Version: 1.0.1
+ * Version: 1.0.0
  * Author: David Andrzejewski
  * Requires Plugins: pie-calendar
  * GitHub Plugin URI: dandrzejewski/pie-calendar-enhancements
  */
 
-// Enable auto-updates by default on activation
-register_activation_hook(__FILE__, 'pce_enable_auto_updates');
-function pce_enable_auto_updates() {
-    $plugin = plugin_basename(__FILE__);
-    $auto_updates = (array) get_site_option('auto_update_plugins', array());
-    if (!in_array($plugin, $auto_updates, true)) {
-        $auto_updates[] = $plugin;
-        update_site_option('auto_update_plugins', $auto_updates);
-    }
-}
-
-// GitHub auto-update functionality
+// GitHub auto-update functionality - must run in network admin too
 add_filter('pre_set_site_transient_update_plugins', 'pce_check_for_update');
+add_filter('site_transient_update_plugins', 'pce_check_for_update'); // Also hook the getter
+
 function pce_check_for_update($transient) {
     if (empty($transient->checked)) return $transient;
     
@@ -32,7 +23,6 @@ function pce_check_for_update($transient) {
     $remote = wp_remote_get("https://api.github.com/repos/{$github_repo}/releases/latest");
     
     if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) != 200) {
-        error_log('GitHub API call failed or no releases found');
         return $transient;
     }
     
@@ -48,13 +38,22 @@ function pce_check_for_update($transient) {
     
     if (version_compare($current_version, $version, '<')) {
         $transient->response[$plugin_slug] = $plugin_info;
-        error_log('Update available: ' . $version);
     } else {
         $transient->no_update[$plugin_slug] = $plugin_info;
-        error_log('No update needed, adding to no_update');
     }
     
     return $transient;
+}
+
+// Enable auto-updates by default on activation
+register_activation_hook(__FILE__, 'pce_enable_auto_updates');
+function pce_enable_auto_updates() {
+    $plugin = plugin_basename(__FILE__);
+    $auto_updates = (array) get_site_option('auto_update_plugins', array());
+    if (!in_array($plugin, $auto_updates, true)) {
+        $auto_updates[] = $plugin;
+        update_site_option('auto_update_plugins', $auto_updates);
+    }
 }
 
 add_action( 'piecal_additional_event_click_js', 'piecal_skip_popover' );
