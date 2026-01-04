@@ -2,9 +2,52 @@
 /**
  * Plugin Name: Pie Calendar Enhancements
  * Description: Pie Calendar Customizations
- * Version: 1.0
+ * Version: 1.0.0
  * Author: Dave
+ * GitHub Plugin URI: dandrzejewski/pie-calendar-enhancements
  */
+
+// GitHub auto-update functionality
+add_filter('pre_set_site_transient_update_plugins', 'pce_check_for_update');
+function pce_check_for_update($transient) {
+    if (empty($transient->checked)) return $transient;
+    
+    $plugin_slug = plugin_basename(__FILE__);
+    $plugin_data = get_file_data(__FILE__, ['Version' => 'Version']);
+    $current_version = $plugin_data['Version'];
+    $github_repo = 'dandrzejewski/pie-calendar-enhancements';
+    
+    $remote = wp_remote_get("https://api.github.com/repos/{$github_repo}/releases/latest");
+    
+    // DEBUG - remove this after testing
+    error_log('GitHub API Response Code: ' . wp_remote_retrieve_response_code($remote));
+    error_log('GitHub API Response Body: ' . wp_remote_retrieve_body($remote));
+    
+    if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) != 200) {
+        error_log('GitHub API call failed or no releases found');
+        return $transient;
+    }
+    
+    $release = json_decode(wp_remote_retrieve_body($remote));
+    $version = ltrim($release->tag_name, 'v');
+    
+    $plugin_info = (object) [
+        'slug' => dirname($plugin_slug),
+        'new_version' => $version,
+        'url' => $release->html_url,
+        'package' => $release->assets[0]->browser_download_url ?? '',
+    ];
+    
+    if (version_compare($current_version, $version, '<')) {
+        $transient->response[$plugin_slug] = $plugin_info;
+        error_log('Update available: ' . $version);
+    } else {
+        $transient->no_update[$plugin_slug] = $plugin_info;
+        error_log('No update needed, adding to no_update');
+    }
+    
+    return $transient;
+}
 
 add_action( 'piecal_additional_event_click_js', 'piecal_skip_popover' );
 function piecal_skip_popover() {
