@@ -31,10 +31,6 @@ function pce_check_for_update($transient) {
     
     $remote = wp_remote_get("https://api.github.com/repos/{$github_repo}/releases/latest");
     
-    // DEBUG - remove this after testing
-    error_log('GitHub API Response Code: ' . wp_remote_retrieve_response_code($remote));
-    error_log('GitHub API Response Body: ' . wp_remote_retrieve_body($remote));
-    
     if (is_wp_error($remote) || wp_remote_retrieve_response_code($remote) != 200) {
         error_log('GitHub API call failed or no releases found');
         return $transient;
