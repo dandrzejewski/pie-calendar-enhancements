@@ -7,6 +7,17 @@
  * GitHub Plugin URI: dandrzejewski/pie-calendar-enhancements
  */
 
+// Enable auto-updates by default on activation
+register_activation_hook(__FILE__, 'pce_enable_auto_updates');
+function pce_enable_auto_updates() {
+    $plugin = plugin_basename(__FILE__);
+    $auto_updates = (array) get_site_option('auto_update_plugins', array());
+    if (!in_array($plugin, $auto_updates, true)) {
+        $auto_updates[] = $plugin;
+        update_site_option('auto_update_plugins', $auto_updates);
+    }
+}
+
 // GitHub auto-update functionality
 add_filter('pre_set_site_transient_update_plugins', 'pce_check_for_update');
 function pce_check_for_update($transient) {
