@@ -2,8 +2,8 @@
 /**
  * Plugin Name: Pie Calendar Enhancements
  * Description: Pie Calendar Customizations
- * Version: 1.0.0
- * Author: Dave
+ * Version: 1.0.1
+ * Author: David Andrzejewski
  * Requires Plugins: pie-calendar
  * GitHub Plugin URI: dandrzejewski/pie-calendar-enhancements
  */
